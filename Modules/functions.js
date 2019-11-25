@@ -1,4 +1,4 @@
-let { DelayLevel } = require('./constants')
+let { DelayLevel } = require('./constants');
 
 
 /**
@@ -19,4 +19,4 @@ function waitForPage (pageType, block, delay) {
 
 module.exports = {
     waitForPage: waitForPage,
-}
+};

@@ -1,5 +1,5 @@
-let { Image, PageType, PageText, DelayLevel } = require('./Modules/constants');
-let { waitForPage } = require('./Modules/functions')
+let {Image, PageType, PageText, DelayLevel} = require('./Modules/constants');
+let {waitForPage} = require('./Modules/functions');
 
 
 /**
@@ -8,18 +8,12 @@ let { waitForPage } = require('./Modules/functions')
 !function init() {
     auto.waitFor();
 
-    setScreenMetrics(1080, 2248);
+    setScreenMetrics(device.width, device.height);
 
     if (!requestScreenCapture()) {
         toastLog("请求截图失败");
         exit();
     }
-    if (!launchApp("支付宝")) {
-        toastLog('未找到支付宝应用');
-        exit();
-    }
-    text('首页').selected(true).findOne();
-    log('进入了支付宝首页');
 }();
 
 
@@ -27,7 +21,10 @@ let { waitForPage } = require('./Modules/functions')
  * 进入蚂蚁森林
  */
 function enterForest() {
-    className('TextView').text('蚂蚁森林').findOne().parent().parent().click();
+    app.startActivity({
+        action: "VIEW",
+        data: "alipays://platformapi/startapp?appId=60000002"
+    });
     waitForPage(PageType.MY_HOME);
     log('进入了蚂蚁森林首页');
 }
@@ -52,7 +49,7 @@ function exitForest() {
  * @return {Array/null} 可点击坐标
  */
 function getCanCollFriends() {
-    log('获取可收取的好友坐标')
+    log('获取可收取的好友坐标');
 
     let img = captureScreen();
     let coordinate = findImage(img, Image.COLL_IMG);
@@ -61,16 +58,33 @@ function getCanCollFriends() {
 
 
 /**
+ * 检测保护罩
+ * @returns {Boolean} true=>存在; false=>不存在
+ */
+function checkShield() {
+    log('检测保护罩');
+
+    let img = captureScreen();
+    return !!findImage(img, Image.SHIELD_IMG);
+}
+
+
+/**
  * 收取单个用户主页所有能量
  * @param {Boolean} block 是否阻塞，默认为 false
  */
 function collectEnergy(block) {
-    log('收取单个用户主页所有能量')
+    log('收取单个用户主页所有能量');
+
+    if (checkShield()) {
+        return
+    }
+
     block = block === undefined ? false : block;
 
     while (true) {
         energyBallSelector = textMatches(/^收集能量\d+克$/);
-        energyBallColl = block ? energyBallSelector.untilFind() : energyBallSelector.find()
+        energyBallColl = block ? energyBallSelector.untilFind() : energyBallSelector.find();
         if (energyBallColl.empty()) {
             return;
         }
@@ -90,10 +104,10 @@ function collectEnergy(block) {
  * 收集单页好友的能量
  */
 function collOnePageFriendsEnergy() {
-    log('收集单页好友的能量')
+    log('收集单页好友的能量');
 
     while (true) {
-        coordinate = getCanCollFriends()
+        coordinate = getCanCollFriends();
         if (!coordinate) {
             return
         }
@@ -116,27 +130,28 @@ function collAllFriendsEnergy() {
         toastLog('当前页面不是蚂蚁森林');
         return;
     }
-    let scrollRet = true;
+
     let layer = PageType.HOMEPAGE;
     if (waitForPage(PageType.MY_HOME, false)) {
         log('当前处于我的蚂蚁森林页面');
         layer = PageType.HOMEPAGE;
     } else if (waitForPage(PageType.FRIENDS_LIST, false)) {
-        log('当前处于好友排行榜页面')
+        log('当前处于好友排行榜页面');
         layer = PageType.FRIENDS_LIST;
     } else {
         toastLog('当前页面不是蚂蚁森林');
         return;
     }
 
+    let scrollRet;
     while (true) {
-        collOnePageFriendsEnergy(layer)
+        collOnePageFriendsEnergy(layer);
         scrollRet = scrollObj.scrollForward();
         if (!scrollRet) {
             if (layer === PageType.HOMEPAGE) {
                 let moreFriends = text('查看更多好友').findOne(DelayLevel.HIGH);
                 if (!moreFriends) {
-                    log('没有找到查看更多好友按钮，退出循环')
+                    log('没有找到查看更多好友按钮，退出循环');
                     break;
                 }
                 moreFriends.click();
@@ -148,7 +163,7 @@ function collAllFriendsEnergy() {
                     log('收取所有好友能量完成');
                     break;
                 }
-                let moreFriends = text('查看更多').findOne(DelayLevel.HIGH)
+                let moreFriends = text('查看更多').findOne(DelayLevel.HIGH);
                 if (!moreFriends) {
                     log('收取所有好友能量完成');
                     break;
@@ -172,7 +187,7 @@ function collAllFriendsEnergy() {
 function main() {
     enterForest();
 
-    collectEnergy()
+    collectEnergy();
 
     collAllFriendsEnergy();
 

@@ -1,5 +1,6 @@
 let Image = {
     COLL_IMG: images.read('./Images/coll_icon.png'),  // 可收取好友手型图标
+    SHIELD_IMG: images.read('./Images/shield_icon.png'),  // 保护罩图标
 };
 
 let PageType = {
@@ -26,4 +27,4 @@ module.exports = {
     PageType: PageType,
     PageText: PageText,
     DelayLevel: DelayLevel,
-}
+};
