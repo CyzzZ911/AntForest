@@ -1,5 +1,7 @@
 let {Image, PageType, PageText, DelayLevel} = require('./Modules/constants');
 let {waitForPage} = require('./Modules/functions');
+let {unlock} = require('./Modules/unlock');
+const config = storages.create('CyzzZ911:AntForest');
 
 
 /**
@@ -185,6 +187,8 @@ function collAllFriendsEnergy() {
  */
 
 function main() {
+    unlock(config.get('password'));
+
     enterForest();
 
     collectEnergy();
